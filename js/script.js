@@ -60,8 +60,10 @@ function generateCardEventListeners(){
     for(let card of cards) {
         card.addEventListener('click', function (event) {
             const userSelectedEmail = card.children[1].children[1].textContent;  //Gets the email of the selected user
-            const userSelected = users.filter(user => user.email === userSelectedEmail);
-            generateModalHTML(userSelected[0]);
+            const currentUsers = searchResults(document.getElementById('search-input').value);
+            const userSelected = currentUsers.find(user => user.email === userSelectedEmail);
+            const userSelectedIndex = currentUsers.findIndex(user => user.email === userSelectedEmail);
+            generateModalHTML(userSelected, userSelectedIndex);
         });
     }
 }
@@ -70,9 +72,9 @@ function generateCardEventListeners(){
  * This function generates the modal HTML and displays it on the page based on the user selected
  * @param {object} user user that was clicked
  */
-function generateModalHTML (user) {
+function generateModalHTML (user, userIndex) {
     let html = ``;
-    const phone = user.phone.replace(/\D/g, '').replace(/(\d{3})(\d{3})(\d{4})/, "($1) $2-$3");
+    const phone = user.cell.replace(/\D/g, '').replace(/(\d{3})(\d{3})(\d{4})/, "($1) $2-$3");
     const birthday = new Date(user.dob.date);
     let month = birthday.getMonth().toString();
     let day = birthday.getDate().toString();
@@ -94,7 +96,7 @@ function generateModalHTML (user) {
                 <img class="modal-img" src=${user.picture.large} alt="profile picture">
                 <h3 id="name" class="modal-name cap">${user.name.first} ${user.name.last}</h3>
                 <p class="modal-text">${user.email}</p>
-                <p class="modal-text cap">${user.city}</p>
+                <p class="modal-text cap">${user.location.city}</p>
                 <hr>
                 <p class="modal-text">${phone}</p>
                 <p class="modal-text">${user.location.street.number} ${user.location.street.name}, ${user.location.city}, ${user.location.state} ${user.location.postcode}</p>
@@ -109,6 +111,8 @@ function generateModalHTML (user) {
     `;
     gallery.insertAdjacentHTML('afterend', html);
     generateCloseButtonListener();
+    generatePrevButtonListener(userIndex);
+    generateNextButtonListener(userIndex);
 }
 
 /**
@@ -116,9 +120,41 @@ function generateModalHTML (user) {
  */
 function generateCloseButtonListener() {
     const close = document.getElementById('modal-close-btn');
-    close.addEventListener('click', function (event) {
+    close.addEventListener('click', function () {
         gallery.nextElementSibling.remove();
     });
+}
+
+/**
+ * This function generates the prev button listener.  It displays the previous user based on the users currently displaying on the screen.
+ * This is to prevent you from seeing users you have currently filtered
+ * @param {number} userIndex Index of user.  Used to prevent you from going out of bounds of the array of users
+ */
+function generatePrevButtonListener(userIndex) {
+    const prev = document.getElementById('modal-prev');
+    prev.addEventListener('click', function () {
+        const currentUsers = searchResults(document.getElementById('search-input').value);
+        if(userIndex > 0) {
+            gallery.nextElementSibling.remove();
+            generateModalHTML(currentUsers[userIndex - 1], userIndex - 1);
+        }
+    })
+}
+
+/**
+ * This function generates the next button listener.  It displays the next user based on the users currently displaying on the screen.
+ * This is to prevent you from seeing users you have currently filtered
+ * @param {number} userIndex Index of user.  Used to prevent you from going out of bounds of the array of users
+ */
+function generateNextButtonListener(userIndex) {
+    const next = document.getElementById('modal-next');
+    next.addEventListener('click', function () {
+        const currentUsers = searchResults(document.getElementById('search-input').value);
+        if(userIndex < currentUsers.length - 1) {
+            gallery.nextElementSibling.remove();
+            generateModalHTML(currentUsers[userIndex + 1], userIndex + 1);
+        }
+    })
 }
 
 /**
