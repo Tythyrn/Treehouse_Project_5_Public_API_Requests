@@ -102,3 +102,5 @@ dist
 
 # TernJS port file
 .tern-port
+mockups/employee_directory.png
+mockups/employee_overlay.png
