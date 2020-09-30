@@ -1,4 +1,5 @@
 const gallery = document.getElementById('gallery');
+const search = document.getElementById('search');
 const randomUserUrl = 'https://randomuser.me/api/?nat=us&results=12';
 const user = [];
 
@@ -15,11 +16,22 @@ async function fetchData(url) {
     }
 }
 
+function generateSearchBar() {
+    let html = `
+        <form action="#" method="get">
+            <input type="search" id="search-input" class="search-input" placeholder="Search...">
+            <input type="submit" value="&#x1F50D;" id="search-submit" class="search-submit">
+        </form>
+    `;
+    search.insertAdjacentHTML('beforeend', html);
+}
+
 /**
  * This function generates the HTML to display the user cards on the UI
  * @param {json} data json data of the returned users
  */
 function generateUserHTML (users) {
+    gallery.innerHTML = '';
     let html = ``;
     for(let user of users) {
         html += `
@@ -89,6 +101,10 @@ function generateModalHTML (user) {
                 <p class="modal-text">Birthday: ${month}/${day}/${year}</p>
             </div>
         </div>
+        <div class="modal-btn-container">
+            <button type="button" id="modal-prev" class="modal-prev btn">Prev</button>
+            <button type="button" id="modal-next" class="modal-next btn">Next</button>
+        </div>
     </div>
     `;
     gallery.insertAdjacentHTML('afterend', html);
@@ -105,13 +121,60 @@ function generateCloseButtonListener() {
     });
 }
 
-//This calls the randomUser API on page load to get and display users
+/**
+ * This function finds all the users that match search criteria
+ * @param {string} searchInput Search terms entered by user
+ * @returns Array of matched users
+ */
+function searchResults(searchInput) {
+    let matchedUsers = [];
+ 
+    for(let user of users) {
+        if(user.email.toLowerCase().includes(searchInput.toLowerCase()) ||
+           user.name.first.toLowerCase().includes(searchInput.toLowerCase()) ||
+           user.name.last.toLowerCase().includes(searchInput.toLowerCase()) ||
+           user.location.city.toLowerCase().includes(searchInput.toLowerCase()) ||
+           user.location.state.toLowerCase().includes(searchInput.toLowerCase())) {
+            matchedUsers.push(user);
+        }
+    }
+    return matchedUsers;
+  }
+
+/**
+ * This calls the randomUser API on page load to get and display users
+ */
 fetchData(randomUserUrl)
     .then(data => {
         users = data.results;
+        generateSearchBar();
         generateUserHTML(users);
     })
     .catch( err => {
         gallery.insertAdjacentHTML('beforeend', '<h2>Something went wrong!</h2>');
         console.error(err)
+    });
+
+/**
+ * This is the search button click event
+ */
+search.addEventListener('click', (e) => {
+    if(e.target.tagName === 'BUTTON') {
+        const input = e.target.value;
+        const userSearchedList = searchResults(input);
+    
+        generateUserHTML(userSearchedList);
+    }
+    });
+
+/**
+ * This is the search box event that fires on keyup
+ */
+search.addEventListener('keyup', (e) => {
+    if(e.target.tagName === 'INPUT') {
+        const input = e.target.value;
+        const userSearchedList = searchResults(input);
+    
+        generateUserHTML(userSearchedList);
+    }
     });
